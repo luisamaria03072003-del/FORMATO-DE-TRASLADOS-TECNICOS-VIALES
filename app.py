@@ -18,54 +18,154 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILOS CSS PARA OPTIMIZACIÓN MÓVIL (CELULARES) ---
+# --- CONTROL DE VEHÍCULOS DINÁMICOS ---
+if "num_equipos" not in st.session_state:
+    st.session_state.num_equipos = 1
+
+# --- ESTILOS CSS: TONOS VERDES INGENIO + OPTIMIZACIÓN CELULAR ---
 st.markdown("""
     <style>
+        /* Fondo general sutil en verde muy claro */
+        .stApp {
+            background-color: #F6FAF5;
+        }
+
+        /* Contenedor adaptado a pantalla de celular */
         .block-container {
-            padding-top: 1.2rem !important;
+            padding-top: 1rem !important;
             padding-bottom: 2.5rem !important;
             padding-left: 1rem !important;
             padding-right: 1rem !important;
             max-width: 600px !important;
         }
-        h1 {
-            font-size: 1.65rem !important;
-            margin-bottom: 0.2rem !important;
+
+        /* Encabezado principal estilo Ingenio */
+        .header-ingenio {
+            background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%);
+            padding: 1.1rem 1.2rem;
+            border-radius: 14px;
+            color: #FFFFFF;
+            margin-bottom: 1.1rem;
+            box-shadow: 0 3px 10px rgba(27, 94, 32, 0.18);
         }
+        .header-ingenio h1 {
+            color: #FFFFFF !important;
+            font-size: 1.55rem !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-weight: 700 !important;
+        }
+        .header-ingenio p {
+            color: #C8E6C9 !important;
+            font-size: 0.9rem !important;
+            margin: 0.25rem 0 0 0 !important;
+        }
+
+        /* Subtítulos de sección en verde bosque */
         h3 {
-            font-size: 1.2rem !important;
-            margin-top: 0.5rem !important;
-            margin-bottom: 0.5rem !important;
+            color: #1B5E20 !important;
+            font-size: 1.15rem !important;
+            border-left: 4px solid #2E7D32;
+            padding-left: 10px;
+            margin-top: 0.6rem !important;
+            margin-bottom: 0.6rem !important;
         }
+
+        /* Etiquetas de preguntas */
         label, .stSelectbox label, .stDateInput label, .stTimeInput label, .stTextArea label {
-            font-size: 1rem !important;
+            color: #1B4332 !important;
+            font-size: 0.98rem !important;
             font-weight: 600 !important;
             margin-bottom: 0.25rem !important;
         }
+
+        /* Tarjetas de cada vehículo */
+        div[data-testid="stVerticalBlockBorderWrapper"] {
+            background-color: #FFFFFF !important;
+            border: 1.5px solid #A5D6A7 !important;
+            border-radius: 12px !important;
+            padding: 0.6rem !important;
+            margin-bottom: 0.6rem !important;
+            box-shadow: 0 2px 5px rgba(46, 125, 50, 0.06);
+        }
+
+        /* Inputs y desplegables cómodos para celular (sin zoom automático) */
         div[data-baseweb="select"] > div,
         div[data-baseweb="input"] > div,
         textarea {
+            background-color: #FFFFFF !important;
+            border-color: #A5D6A7 !important;
             font-size: 16px !important;
             min-height: 48px !important;
             border-radius: 10px !important;
         }
+
+        div[data-baseweb="select"] > div:focus-within,
+        div[data-baseweb="input"] > div:focus-within,
+        textarea:focus {
+            border-color: #2E7D32 !important;
+            box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2) !important;
+        }
+
         input {
             font-size: 16px !important;
         }
+
+        /* Botón principal (Enviar Traslado) en verde cañero */
         div.stButton > button[kind="primary"] {
+            background-color: #2E7D32 !important;
+            border-color: #2E7D32 !important;
+            color: #FFFFFF !important;
             min-height: 54px !important;
             font-size: 1.1rem !important;
             font-weight: 700 !important;
             border-radius: 12px !important;
             margin-top: 0.5rem !important;
+            box-shadow: 0 3px 8px rgba(46, 125, 50, 0.25);
         }
+        div.stButton > button[kind="primary"]:hover {
+            background-color: #1B5E20 !important;
+            border-color: #1B5E20 !important;
+        }
+
+        /* Botones secundarios (Agregar / Quitar vehículo) */
+        div.stButton > button[kind="secondary"] {
+            background-color: #E8F5E9 !important;
+            border: 1.5px solid #43A047 !important;
+            color: #1B5E20 !important;
+            min-height: 46px !important;
+            font-size: 0.98rem !important;
+            font-weight: 600 !important;
+            border-radius: 10px !important;
+        }
+        div.stButton > button[kind="secondary"]:hover {
+            background-color: #C8E6C9 !important;
+        }
+
+        /* Etiqueta superior de cada tarjeta de vehículo */
+        .badge-vehiculo {
+            background-color: #E8F5E9;
+            color: #1B5E20;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-bottom: 6px;
+        }
+
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🚜 Formato de Traslados")
-st.caption("Registro operativo de movimiento de maquinaria - Técnicos Viales")
+# --- ENCABEZADO VERDE ---
+st.markdown("""
+    <div class="header-ingenio">
+        <h1>🚜 Formato de Traslados</h1>
+        <p>Control de Maquinaria y Equipos • Técnicos Viales</p>
+    </div>
+""", unsafe_allow_html=True)
 
 # --- LISTAS DE DATOS DEL FORMULARIO ---
 TECNICOS_VIALES = [
@@ -149,7 +249,8 @@ HACIENDAS_DESTINO = [
     "796 EL MADRONO", "797 PARCELAS ROLDANILLO", "798 TAPIAS", "799 VISTA HERMOSA"
 ]
 
-# --- CAMPOS DEL FORMULARIO ---
+# --- DATOS GENERALES ---
+st.subheader("Datos del Turno")
 fecha = st.date_input("Fecha *", value=ahora_col.date(), format="MM/DD/YYYY")
 hora_salida = st.time_input("Hora de salida *", value=ahora_col.time().replace(second=0, microsecond=0))
 
@@ -157,30 +258,57 @@ tecnico = st.selectbox("Nombre del técnico Vial *", TECNICOS_VIALES)
 turno = st.selectbox("Turno *", TURNOS)
 frente = st.selectbox("Frente *", FRENTES)
 
-st.divider()
-st.subheader("Datos del Equipo")
+# --- MAQUINARIA / VEHÍCULOS A TRASLADAR (1 O VARIOS) ---
+st.subheader("Maquinaria a Trasladar")
 
-tipo_equipo = st.selectbox(
-    "Tipo de equipo *",
-    ["Seleccione tipo..."] + list(BASE_EQUIPOS.keys())
-)
+equipos_lista = []
+errores_equipos = []
 
-num_interno = "Seleccione número..."
-if tipo_equipo != "Seleccione tipo...":
-    num_interno = st.selectbox(
-        f"Número interno ({tipo_equipo}) *",
-        ["Seleccione número..."] + BASE_EQUIPOS[tipo_equipo]
-    )
-    if num_interno != "Seleccione número...":
-        st.info(f"🚜 Seleccionado: **{tipo_equipo} — Interno {num_interno}**")
-else:
-    st.selectbox(
-        "Número interno *",
-        ["Seleccione primero el tipo de equipo"],
-        disabled=True
-    )
+for i in range(st.session_state.num_equipos):
+    with st.container(border=True):
+        if st.session_state.num_equipos > 1:
+            st.markdown(f'<div class="badge-vehiculo">🚜 Vehículo #{i + 1}</div>', unsafe_allow_html=True)
 
-st.divider()
+        tipo_equipo = st.selectbox(
+            "Tipo de equipo *",
+            ["Seleccione tipo..."] + list(BASE_EQUIPOS.keys()),
+            key=f"tipo_eq_{i}"
+        )
+
+        if tipo_equipo != "Seleccione tipo...":
+            num_interno = st.selectbox(
+                f"Número interno ({tipo_equipo}) *",
+                ["Seleccione número..."] + BASE_EQUIPOS[tipo_equipo],
+                key=f"num_int_{i}"
+            )
+            if num_interno == "Seleccione número...":
+                errores_equipos.append(f"Número interno (Vehículo #{i + 1})" if st.session_state.num_equipos > 1 else "Número interno")
+            else:
+                equipos_lista.append({
+                    "tipo_equipo": tipo_equipo,
+                    "numero_interno": num_interno
+                })
+        else:
+            st.selectbox(
+                "Número interno *",
+                ["Seleccione primero el tipo de equipo"],
+                disabled=True,
+                key=f"num_int_disabled_{i}"
+            )
+            errores_equipos.append(f"Tipo de equipo (Vehículo #{i + 1})" if st.session_state.num_equipos > 1 else "Tipo de equipo")
+
+# Botones para agregar más vehículos (ej. Tractor + Cosechadora) o quitar el último
+if st.button("➕ Agregar otro vehículo al traslado", type="secondary", use_container_width=True):
+    st.session_state.num_equipos += 1
+    st.rerun()
+
+if st.session_state.num_equipos > 1:
+    if st.button("🗑️ Quitar último vehículo", type="secondary", use_container_width=True):
+        st.session_state.num_equipos -= 1
+        st.rerun()
+
+# --- DESTINO Y OBSERVACIONES ---
+st.subheader("Destino y Novedades")
 hacienda_destino = st.selectbox(
     "Hacienda de destino * (Escriba código o nombre)",
     HACIENDAS_DESTINO
@@ -201,10 +329,7 @@ if st.button("📤 Enviar Traslado", type="primary", use_container_width=True):
         errores.append("Turno")
     if frente == "Seleccione un frente...":
         errores.append("Frente")
-    if tipo_equipo == "Seleccione tipo...":
-        errores.append("Tipo de equipo")
-    elif num_interno == "Seleccione número...":
-        errores.append("Número interno")
+    errores.extend(errores_equipos)
     if hacienda_destino == "Seleccione hacienda de destino...":
         errores.append("Hacienda de destino")
 
@@ -216,23 +341,19 @@ if st.button("📤 Enviar Traslado", type="primary", use_container_width=True):
             "tecnico": tecnico,
             "turno": turno,
             "frente": frente,
-            "cantidad_equipos": 1,
-            "equipos": [
-                {
-                    "tipo_equipo": tipo_equipo,
-                    "numero_interno": num_interno
-                }
-            ],
+            "cantidad_equipos": len(equipos_lista),
+            "equipos": equipos_lista,
             "hacienda_destino": hacienda_destino,
             "hora_salida": hora_salida.strftime("%H:%M"),
             "observaciones": observaciones
         }
 
         try:
-            with st.spinner("Guardando traslado..."):
+            with st.spinner("Guardando traslado en Google Sheets..."):
                 respuesta = requests.post(APPS_SCRIPT_URL, json=payload, timeout=15)
                 if respuesta.status_code == 200 and "ok" in respuesta.text:
-                    st.success(f"✅ ¡Traslado guardado! ({tipo_equipo} - Interno {num_interno}).")
+                    resumen = ", ".join([f"{e['tipo_equipo']} #{e['numero_interno']}" for e in equipos_lista])
+                    st.success(f"✅ ¡Traslado guardado! ({resumen}).")
                 elif respuesta.status_code == 200:
                     st.warning("⚠️ Google bloqueó la escritura. Verifica en Apps Script que el acceso sea para 'Cualquier persona'.")
                 else:

@@ -313,4 +313,39 @@ observaciones = st.text_area(
 if st.button("📤 Enviar Traslado", type="primary", use_container_width=True):
     errores = []
     if tecnico == "Seleccione un técnico...":
-        errores.append("Nombre del técnico Vial
+        errores.append("Nombre del técnico Vial")
+    if turno == "Seleccione un turno...":
+        errores.append("Turno")
+    if frente == "Seleccione un frente...":
+        errores.append("Frente")
+    errores.extend(errores_equipos)
+    if hacienda_destino == "Seleccione hacienda de destino...":
+        errores.append("Hacienda de destino")
+
+    if errores:
+        st.error(f"⚠️ Completa los campos obligatorios: **{', '.join(errores)}**.")
+    else:
+        payload = {
+            "fecha": fecha.strftime("%Y-%m-%d"),
+            "tecnico": tecnico,
+            "turno": turno,
+            "frente": frente,
+            "cantidad_equipos": len(equipos_lista),
+            "equipos": equipos_lista,
+            "hacienda_destino": hacienda_destino,
+            "hora_salida": hora_salida.strftime("%H:%M"),
+            "observaciones": observaciones
+        }
+
+        try:
+            with st.spinner("Guardando traslado en Google Sheets..."):
+                respuesta = requests.post(APPS_SCRIPT_URL, json=payload, timeout=15)
+                if respuesta.status_code == 200 and "ok" in respuesta.text:
+                    resumen = ", ".join([f"{e['tipo_equipo']} #{e['numero_interno']}" for e in equipos_lista])
+                    st.success(f"✅ ¡Traslado guardado! ({resumen}).")
+                elif respuesta.status_code == 200:
+                    st.warning("⚠️ Google bloqueó la escritura. Verifica en Apps Script que el acceso sea para 'Cualquier persona'.")
+                else:
+                    st.error(f"⚠️ Error al guardar (Código {respuesta.status_code}): {respuesta.text}")
+        except Exception as e:
+            st.error(f"❌ Error de conexión con Google Sheets: {e}")

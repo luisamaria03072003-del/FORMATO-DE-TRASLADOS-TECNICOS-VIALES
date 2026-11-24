@@ -1,4 +1,4 @@
- import streamlit as st
+import streamlit as st
 import requests
 import datetime
 from zoneinfo import ZoneInfo
@@ -21,7 +21,6 @@ st.set_page_config(
 # --- ESTILOS CSS PARA OPTIMIZACIÓN MÓVIL (CELULARES) ---
 st.markdown("""
     <style>
-        /* Reducir espacio superior innecesario en pantallas pequeñas */
         .block-container {
             padding-top: 1.2rem !important;
             padding-bottom: 2.5rem !important;
@@ -29,27 +28,20 @@ st.markdown("""
             padding-right: 1rem !important;
             max-width: 600px !important;
         }
-
-        /* Título más compacto para móviles */
         h1 {
             font-size: 1.65rem !important;
             margin-bottom: 0.2rem !important;
         }
-
         h3 {
             font-size: 1.2rem !important;
             margin-top: 0.5rem !important;
             margin-bottom: 0.5rem !important;
         }
-
-        /* Etiquetas de preguntas más claras y legibles bajo el sol */
         label, .stSelectbox label, .stDateInput label, .stTimeInput label, .stTextArea label {
             font-size: 1rem !important;
             font-weight: 600 !important;
             margin-bottom: 0.25rem !important;
         }
-
-        /* Evitar zoom automático en iPhone/Android (fuente mínima 16px) y ampliar área táctil */
         div[data-baseweb="select"] > div,
         div[data-baseweb="input"] > div,
         textarea {
@@ -57,12 +49,9 @@ st.markdown("""
             min-height: 48px !important;
             border-radius: 10px !important;
         }
-
         input {
             font-size: 16px !important;
         }
-
-        /* Botón principal grande y fácil de presionar con el pulgar */
         div.stButton > button[kind="primary"] {
             min-height: 54px !important;
             font-size: 1.1rem !important;
@@ -70,8 +59,6 @@ st.markdown("""
             border-radius: 12px !important;
             margin-top: 0.5rem !important;
         }
-
-        /* Ocultar menú superior innecesario para ganar espacio en celular */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
     </style>
@@ -146,4 +133,109 @@ HACIENDAS_DESTINO = [
     "469 HOLGUINES", "496 SAN JERONIMO", "499 RUMOR", "530 SANTINO",
     "531 PORVENIR", "533 LOS NARANJOS", "534 LA PISTA R", "535 LA SUERTE",
     "536 LA GUADALUPE", "542 EL PORVENIR R", "543 BIZERTA", "545 LOS MANGOS",
-    "547 LA AURORA", "548 BRASILAR
+    "547 LA AURORA", "548 BRASILAR", "549 ARGENTINA", "550 TABLACITO",
+    "551 EL EDEN", "552 PRAGA", "553 BELLAVISTA", "554 EL ALBERGUE",
+    "556 SAN MATEO", "557 LAS TRES MARIAS", "558 BELLAVISTA P", "561 LA PALMA TAFUR",
+    "564 CAMPOALEGRE", "567 LA BOLA TAFUR", "571 CHAMBIMBE G",
+    "572 LA MORENITA CASTELLANO", "576 LA FLORESTA Z", "577 SACRISTIA",
+    "578 ZABALETAS ARANGO", "581 TESORITO G", "582 TAYRONA", "583 TAYRONA TAFUR",
+    "584 LA MARGARITA", "585 LA ESPINOSA", "586 EL ALTERON", "587 VILLA SARAÍ",
+    "588 BOLA ROJA", "590 ARMONIA A", "591 CHAMBIMBE A", "592 MIEL",
+    "593 LA FLORESTA C", "709 TESORITO", "715 EL PLACER", "720 TESORITO (2)",
+    "721 VIVERO", "731 MALAGA", "732 LOMA LINDA", "735 SAN SEBASTIAN",
+    "736 SANTA-ANA", "737 BUENOS AIRES", "738 EL TREBOL", "748 LA NUBIA",
+    "790 LA ISABELLA", "791 PORVENIR ANDRADE", "792 EL CLAVO",
+    "793 VILLA ELVIRA Y OTROS", "794 BRASILAR R", "795 LA FERNANDA",
+    "796 EL MADRONO", "797 PARCELAS ROLDANILLO", "798 TAPIAS", "799 VISTA HERMOSA"
+]
+
+# --- CAMPOS DEL FORMULARIO ---
+fecha = st.date_input("Fecha *", value=ahora_col.date(), format="MM/DD/YYYY")
+hora_salida = st.time_input("Hora de salida *", value=ahora_col.time().replace(second=0, microsecond=0))
+
+tecnico = st.selectbox("Nombre del técnico Vial *", TECNICOS_VIALES)
+turno = st.selectbox("Turno *", TURNOS)
+frente = st.selectbox("Frente *", FRENTES)
+
+st.divider()
+st.subheader("Datos del Equipo")
+
+tipo_equipo = st.selectbox(
+    "Tipo de equipo *",
+    ["Seleccione tipo..."] + list(BASE_EQUIPOS.keys())
+)
+
+num_interno = "Seleccione número..."
+if tipo_equipo != "Seleccione tipo...":
+    num_interno = st.selectbox(
+        f"Número interno ({tipo_equipo}) *",
+        ["Seleccione número..."] + BASE_EQUIPOS[tipo_equipo]
+    )
+    if num_interno != "Seleccione número...":
+        st.info(f"🚜 Seleccionado: **{tipo_equipo} — Interno {num_interno}**")
+else:
+    st.selectbox(
+        "Número interno *",
+        ["Seleccione primero el tipo de equipo"],
+        disabled=True
+    )
+
+st.divider()
+hacienda_destino = st.selectbox(
+    "Hacienda de destino * (Escriba código o nombre)",
+    HACIENDAS_DESTINO
+)
+
+observaciones = st.text_area(
+    "Observaciones o novedades durante el traslado",
+    height=100,
+    placeholder="Escriba aquí cualquier novedad (opcional)..."
+)
+
+# --- BOTÓN DE ENVÍO ---
+if st.button("📤 Enviar Traslado", type="primary", use_container_width=True):
+    errores = []
+    if tecnico == "Seleccione un técnico...":
+        errores.append("Nombre del técnico Vial")
+    if turno == "Seleccione un turno...":
+        errores.append("Turno")
+    if frente == "Seleccione un frente...":
+        errores.append("Frente")
+    if tipo_equipo == "Seleccione tipo...":
+        errores.append("Tipo de equipo")
+    elif num_interno == "Seleccione número...":
+        errores.append("Número interno")
+    if hacienda_destino == "Seleccione hacienda de destino...":
+        errores.append("Hacienda de destino")
+
+    if errores:
+        st.error(f"⚠️ Completa los campos obligatorios: **{', '.join(errores)}**.")
+    else:
+        payload = {
+            "fecha": fecha.strftime("%Y-%m-%d"),
+            "tecnico": tecnico,
+            "turno": turno,
+            "frente": frente,
+            "cantidad_equipos": 1,
+            "equipos": [
+                {
+                    "tipo_equipo": tipo_equipo,
+                    "numero_interno": num_interno
+                }
+            ],
+            "hacienda_destino": hacienda_destino,
+            "hora_salida": hora_salida.strftime("%H:%M"),
+            "observaciones": observaciones
+        }
+
+        try:
+            with st.spinner("Guardando traslado..."):
+                respuesta = requests.post(APPS_SCRIPT_URL, json=payload, timeout=15)
+                if respuesta.status_code == 200 and "ok" in respuesta.text:
+                    st.success(f"✅ ¡Traslado guardado! ({tipo_equipo} - Interno {num_interno}).")
+                elif respuesta.status_code == 200:
+                    st.warning("⚠️ Google bloqueó la escritura. Verifica en Apps Script que el acceso sea para 'Cualquier persona'.")
+                else:
+                    st.error(f"⚠️ Error al guardar (Código {respuesta.status_code}): {respuesta.text}")
+        except Exception as e:
+            st.error(f"❌ Error de conexión con Google Sheets: {e}")

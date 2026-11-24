@@ -3,10 +3,10 @@ import requests
 import datetime
 from zoneinfo import ZoneInfo
 
-# URL de tu implementación de Google Apps Script
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzaeC4tI9uz-NrZxE2bKAu3HEDKR1Z9Pi-20iPksudbJqLmTfUEhx1lpWz1CpZqbWMNkw/exec"
+# Nueva URL de implementación de Google Apps Script
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwRmq614HFCv-imhc_63hjoT9sM7qRlcJP6Do5ErkjFWBBfjXQj5T5S6zpoW80Hbkh5-w/exec"
 
-# Hora actual en Colombia (evita desfases de fecha en servidores en la nube)
+# Hora actual en Colombia
 ZONA_COLOMBIA = ZoneInfo("America/Bogota")
 ahora_col = datetime.datetime.now(ZONA_COLOMBIA)
 
@@ -42,7 +42,6 @@ FRENTES = [
 ]
 
 # Diccionario de Tipos de Equipo -> Números Internos
-# (Incluye los de prueba y opciones temporales para los demás tipos)
 BASE_EQUIPOS = {
     "Tractor": ["1", "2", "3", "4", "5", "6"],
     "Alzadora": ["7", "8", "9", "10"],
@@ -172,7 +171,6 @@ observaciones = st.text_area("Observaciones o novedades durante el traslado")
 
 # --- BOTÓN DE ENVÍO ---
 if st.button("📤 Enviar Traslado", type="primary", use_container_width=True):
-    # Validación de campos obligatorios
     errores = []
     if tecnico == "Seleccione un técnico...":
         errores.append("Nombre del técnico Vial")
@@ -203,8 +201,10 @@ if st.button("📤 Enviar Traslado", type="primary", use_container_width=True):
         try:
             with st.spinner("Registrando traslado en Google Sheets..."):
                 respuesta = requests.post(APPS_SCRIPT_URL, json=payload, timeout=15)
-                if respuesta.status_code == 200:
+                if respuesta.status_code == 200 and "ok" in respuesta.text:
                     st.success(f"✅ ¡Traslado registrado exitosamente! ({cantidad_equipos} equipo(s) enviado(s)).")
+                elif respuesta.status_code == 200:
+                    st.warning("⚠️ Google bloqueó la escritura. Verifica en Apps Script que la implementación tenga acceso para 'Cualquier persona'.")
                 else:
                     st.error(f"⚠️ Error al guardar (Código {respuesta.status_code}): {respuesta.text}")
         except Exception as e:
